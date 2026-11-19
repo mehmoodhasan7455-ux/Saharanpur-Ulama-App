@@ -1,0 +1,47 @@
+name: Build Saharanpur Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 35
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract Android project
+        run: |
+          mkdir android-project
+          ZIP_FILE=$(find . -maxdepth 1 -name 'SaharanpurUlama_Android_Project_v2*.zip' -print -quit)
+          test -n "$ZIP_FILE"
+          unzip -q "$ZIP_FILE" -d android-project
+
+      - name: Build APK
+        run: gradle -p android-project assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Saharanpur-Ulama-APK
+          path: android-project/app/build/outputs/apk/debug/app-debug.apk
